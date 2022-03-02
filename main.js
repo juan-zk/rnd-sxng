@@ -2,9 +2,7 @@ const client_id = '08c0088ca30a4559afa20260f0fa169d'
 const client_secret = 'dc18b32991354ee09f631c7985f66187'
 
 var token;
-
-var req = {
-  genres: ["acoustic",
+var genList = ["acoustic",
   "afrobeat",
   "alt-rock",
   "alternative",
@@ -40,7 +38,6 @@ var req = {
   "electronic",
   "emo",
   "folk",
-  "forro",
   "french",
   "funk",
   "garage",
@@ -129,65 +126,136 @@ var req = {
   "trip-hop",
   "turkish",
   "work-out",
-  "world-music"],
+  "world-music"]
+
+var req = {
+  genres: genList,
   genre: null,
   year: null,
   limit: 10,
   offset: null,
   mrkt: 'ES',
   song: null
-} 
-
-getURL();
+}
 
 function getURL() {
   req.genre = Math.floor(Math.random() * (127 - 0)) + 0; //1 genero random entre los 127 que hay actualmente en Spotify
-  req.year = Math.floor(Math.random() * ((new Date().getFullYear()+1) - 1950)) + 1950; //año random entre 1950 y hoy
+  req.year = Math.floor(Math.random() * ((new Date().getFullYear() + 1) - 1950)) + 1950; //año random entre 1950 y hoy
   req.offset = Math.floor(Math.random() * (1000 - 1)) + 1; //nro de página de los resultados 1 a 1000
   req.song = Math.floor(Math.random() * (10 - 0)) + 0; //nro en lista de cada pags de resultados
 
   fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + btoa(client_id +':'+ client_secret)
-      },
-      body: 'grant_type=client_credentials'
-  })
-  .then(response => response.json())
-  .then(data => {
-    token = data.access_token,
-
-    fetch('	https://api.spotify.com/v1/search?q=genre:'+ req.genres[req.genre] +'+year:'+ req.year +'&type=track&market='+ req.mrkt +'&limit='+ req.limit +'&offset='+ req.offset, {
-    method: 'GET',
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-  }
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret)
+    },
+    body: 'grant_type=client_credentials'
   })
-  .then(response => response.json())
-  .then(data => {
-    try {
-      var link = "https://open.spotify.com/embed?uri=spotify:track:"
-      var song={     
-      Name: (data.tracks.items[req.song].name), //si da error es porque pudo hacer la apicall pero no hay resultados en los parametros rnmd indicados antes
-      Artist: (data.tracks.items[req.song].artists[0].name),
-      Album: (data.tracks.items[req.song].album.name),
-      Cover: (data.tracks.items[req.song].album.images[0].url),
-      url: (data.tracks.items[req.song].external_urls.spotify),
-      Preview: (data.tracks.items[req.song].preview_url),
-      id: (data.tracks.items[req.song].id)
-      };
-      console.log(song);
+    .then(response => response.json())
+    .then(data => {
+      token = data.access_token,
 
-      document.querySelector("#reproductor").setAttribute("src",(link + song.id));
+        fetch('	https://api.spotify.com/v1/search?q=genre:' + req.genres[req.genre] + '+year:' + req.year + '&type=track&market=' + req.mrkt + '&limit=' + req.limit + '&offset=' + req.offset, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            try {
+              var link = "https://open.spotify.com/embed?uri=spotify:track:"
+              var song = {
+                Name: (data.tracks.items[req.song].name), //si da error es porque pudo hacer la apicall pero no hay resultados en los parametros rnmd indicados antes
+                Artist: (data.tracks.items[req.song].artists[0].name),
+                Album: (data.tracks.items[req.song].album.name),
+                Cover: (data.tracks.items[req.song].album.images[0].url),
+                url: (data.tracks.items[req.song].external_urls.spotify),
+                Preview: (data.tracks.items[req.song].preview_url),
+                id: (data.tracks.items[req.song].id)
+              };
+              console.log(song);
+
+              document.querySelector("#reproductor").setAttribute("src", (link + song.id));
 
 
-    } catch (error) {
-      getURL() //vuelve a hacer todo de nuevo con parametros nuevos
-    }
-  });
-  });
+            } catch (error) {
+              getURL() //vuelve a hacer todo de nuevo con parametros nuevos
+            }
+          });
+    });
 }
 
-document.querySelector("#random").addEventListener("click",getURL);
+genFilters = ["acoustic",
+"alt-rock",
+"alternative",
+"black-metal",
+"blues",
+"breakbeat",
+"cantopop",
+"chill",
+"classical",
+"country",
+"dance",
+"death-metal",
+"deep-house",
+"disco",
+"dub",
+"dubstep",
+"electro",
+"folk",
+"funk",
+"garage",
+"grunge",
+"hard-rock",
+"hardcore",
+"heavy-metal",
+"hip-hop",
+"house",
+"indian",
+"indie",
+"indie-pop",
+"jazz",
+"k-pop",
+"latino",
+"mandopop",
+"metal",
+"opera",
+"pop",
+"punk",
+"punk-rock",
+"reggae",
+"reggaeton",
+"rock",
+"romance",
+"salsa",
+"samba",
+"sertanejo",
+"soul",
+"spanish",
+"summer",
+"tango",
+"techno",
+"trance"]
+
+genFilters.forEach(gen => {
+  document.querySelector(".genre-grid").innerHTML += '<label class="genre"><input type="checkbox">' + gen + '</label>';
+});
+
+document.querySelector("#random").addEventListener("click", getURL);
+
+document.querySelector(".arrow").addEventListener("click",function(){
+  var actualPosition = document.querySelector(".genres").style.bottom;
+  if (actualPosition ==="-100%"){
+    document.querySelector(".genres").style.bottom = "0";
+    document.querySelector(".arrow").classList.remove("bxs-chevron-up");
+    document.querySelector(".arrow").classList.add("bxs-chevron-down");
+  }
+  else{    
+    document.querySelector(".genres").style.bottom = "-100%";    
+    document.querySelector(".arrow").classList.remove("bxs-chevron-down");
+    document.querySelector(".arrow").classList.add("bxs-chevron-up");
+  }
+});
